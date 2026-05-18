@@ -1,0 +1,12 @@
+[project]
+name = "hermes-proxmox-cli"
+version = "0.1.0"
+description = "CLI de pilotage d'infrastructure Proxmox — compatible agents IA"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "click>=8.3.2",
+    "proxmoxer>=2.3.0",
+    "python-dotenv>=1.2.2",
+    "requests>=2.33.1",
+]
