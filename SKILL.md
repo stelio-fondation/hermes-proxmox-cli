@@ -40,6 +40,23 @@ Commandes disponibles :
 - **Config** : `python -m proxmox_cli.main config --vmid <id> --node <node> [--memory <MB>] [--cores <N>] [--ip <CIDR>] [--gw <IP>]`
 - **Manage** : `python -m proxmox_cli.main manage [start|stop|delete] --vmid <id> --node <node>`
 
+### 🖥️ 4. Node Management (local hypervisor)
+
+État du nœud, stockage, services, réseau, backups et tâches :
+
+| Commande | Usage |
+|---|---|
+| `node status` | État global (uptime, CPU, RAM, load, version PVE) |
+| `node info` | Infos détaillées (kernel, modèle CPU, swap, loads) |
+| `node storage` | Stockages disponibles et occupation |
+| `node services` | Statut des services PVE |
+| `node tasks --limit N` | Historique des N dernières tâches |
+| `node network` | Configuration réseau (bridges, bonds, adresses) |
+| `node firewall` | Règles de pare-feu |
+| `node updates` | Mises à jour APT disponibles |
+| `node backup --vmid <id>` | Backup vzdump d'une VM (mode: snapshot/suspend/stop) |
+| `node backups --storage <nom>` | Lister les backups sur un stockage |
+
 ## Best Practices
 - Toujours utiliser `--format json` pour une lecture fiable des données.
 - Privilégier le clonage à partir de templates pour assurer la reproductibilité.
