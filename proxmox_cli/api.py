@@ -3,10 +3,10 @@ import click
 from proxmoxer import ProxmoxAPI
 from dotenv import load_dotenv
 
-# Load .env for local development if present
-load_dotenv()
 
 def get_api_client():
+    # Load .env for local development if present
+    load_dotenv()
     """
     Initializes and returns the Proxmox API client using environment variables.
     Expected variables:
