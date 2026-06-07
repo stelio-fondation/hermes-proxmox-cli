@@ -1,11 +1,7 @@
 import click
 import time
 from datetime import datetime
-
-def _output(ctx, data, headers=None):
-    """Utility to output data in text or json format."""
-    from ..output import output_result
-    output_result(ctx, data, headers)
+from ..output import output_result
 
 
 def _resolve_node(proxmox, node_name=None):
@@ -54,7 +50,7 @@ def status(ctx):
                 'pveversion': status_data.get('pveversion', 'N/A'),
             })
 
-        _output(ctx, results, headers=[
+        output_result(ctx, results, headers=[
             'node', 'status', 'uptime_sec', 'cpus', 'loadavg',
             'memory_total_gb', 'memory_used_gb',
             'pveversion'
@@ -99,7 +95,7 @@ def node_info(ctx, node_name):
             'swap_used_gb': round(status_data.get('swap', {}).get('used', 0) / 1024 / 1024 / 1024, 1) if isinstance(status_data.get('swap'), dict) else 'N/A',
         }
 
-        _output(ctx, info)
+        output_result(ctx, info)
     except Exception as e:
         click.echo(f"Error getting node info: {e}", err=True)
 
@@ -141,7 +137,7 @@ def storage(ctx, node_name):
                 'used_pct': f"{pct:.1f}%",
             })
 
-        _output(ctx, results, headers=[
+        output_result(ctx, results, headers=[
             'storage', 'type', 'content', 'active', 'total_gb', 'used_gb', 'used_pct'
         ])
     except Exception as e:
@@ -227,7 +223,7 @@ def list_backups(ctx, node_name, storage_name):
             click.echo(f"No backups found on {storage_name}.")
             return
 
-        _output(ctx, results, headers=['vmid', 'format', 'size_gb', 'date', 'volid'])
+        output_result(ctx, results, headers=['vmid', 'format', 'size_gb', 'date', 'volid'])
     except Exception as e:
         click.echo(f"Error listing backups: {e}", err=True)
 
@@ -255,7 +251,7 @@ def services(ctx, node_name):
                 'description': s.get('desc', ''),
             })
 
-        _output(ctx, results, headers=['service', 'state', 'running', 'description'])
+        output_result(ctx, results, headers=['service', 'state', 'running', 'description'])
     except Exception as e:
         click.echo(f"Error listing services: {e}", err=True)
 
@@ -294,7 +290,7 @@ def tasks(ctx, node_name, limit):
             click.echo("No tasks found.")
             return
 
-        _output(ctx, results, headers=['type', 'status', 'exitstatus', 'node', 'user', 'started', 'duration_s'])
+        output_result(ctx, results, headers=['type', 'status', 'exitstatus', 'node', 'user', 'started', 'duration_s'])
     except Exception as e:
         click.echo(f"Error listing tasks: {e}", err=True)
 
@@ -332,7 +328,7 @@ def network(ctx, node_name):
                 'bond_mode': iface.get('bond_mode', ''),
             })
 
-        _output(ctx, results, headers=['iface', 'type', 'active', 'method', 'address', 'bridge_ports'])
+        output_result(ctx, results, headers=['iface', 'type', 'active', 'method', 'address', 'bridge_ports'])
     except Exception as e:
         click.echo(f"Error listing network: {e}", err=True)
 
@@ -372,7 +368,7 @@ def updates(ctx, node_name):
             click.echo("No updates available.")
             return
 
-        _output(ctx, results, headers=['package', 'old_version', 'new_version', 'urgency'])
+        output_result(ctx, results, headers=['package', 'old_version', 'new_version', 'urgency'])
     except Exception as e:
         click.echo(f"Error checking updates: {e}", err=True)
 
@@ -414,6 +410,6 @@ def firewall(ctx, node_name):
             click.echo("No firewall rules defined.")
             return
 
-        _output(ctx, results, headers=['pos', 'type', 'action', 'iface', 'proto', 'source', 'dest', 'comment'])
+        output_result(ctx, results, headers=['pos', 'type', 'action', 'iface', 'proto', 'source', 'dest', 'comment'])
     except Exception as e:
         click.echo(f"Error listing firewall rules: {e}", err=True)
