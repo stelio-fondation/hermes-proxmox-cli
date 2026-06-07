@@ -147,8 +147,9 @@ def storage(ctx, node_name):
 @click.option('--node-name', default=None, help='Node name (default: first available)')
 @click.option('--mode', type=click.Choice(['snapshot', 'suspend', 'stop']), default='snapshot', help='Backup mode')
 @click.option('--compress', type=click.Choice(['0', '1', 'lzo', 'gzip', 'zstd']), default='zstd', help='Compression algorithm')
+@click.option('--timeout', default=300, type=int, help='Max wait time in seconds for backup completion (default: 300)')
 @click.pass_context
-def backup(ctx, vmid, node_name, mode, compress):
+def backup(ctx, vmid, node_name, mode, compress, timeout):
     """Backup une VM via vzdump."""
     proxmox = ctx.obj['api']
 
@@ -171,9 +172,14 @@ def backup(ctx, vmid, node_name, mode, compress):
 
         click.echo(f"Backup task started: {task_upid}")
 
-        # Poll for completion
+        # Poll for completion with timeout
+        start_time = time.time()
         while True:
             time.sleep(2)
+            elapsed = time.time() - start_time
+            if elapsed > timeout:
+                click.echo(f"Backup timed out after {timeout}s.", err=True)
+                break
             task_status = proxmox.nodes(node_name).tasks(task_upid).status.get()
             if task_status.get('status') == 'stopped':
                 if task_status.get('exitstatus') == 'OK':

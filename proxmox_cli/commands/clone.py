@@ -7,8 +7,9 @@ import time
 @click.option('--name', required=True, help='Name for the new VM')
 @click.option('--node', required=True, help='Node where the source is located')
 @click.option('--full', is_flag=True, default=False, help='Create a full clone instead of a linked clone')
+@click.option('--timeout', default=300, type=int, help='Max wait time in seconds for task completion (default: 300)')
 @click.pass_context
-def clone_vm(ctx, source_id, new_id, name, node, full):
+def clone_vm(ctx, source_id, new_id, name, node, full, timeout):
     """Clone a VM or template."""
     proxmox = ctx.obj['api']
     
@@ -24,8 +25,13 @@ def clone_vm(ctx, source_id, new_id, name, node, full):
         
         click.echo(f"Clone task started: {task_upid}")
         
-        # Simple polling for task completion
+        # Polling for task completion with timeout
+        start_time = time.time()
         while True:
+            elapsed = time.time() - start_time
+            if elapsed > timeout:
+                click.echo(f"Clone timed out after {timeout}s.", err=True)
+                break
             status = proxmox.nodes(node).tasks(task_upid).status.get()
             if status.get('status') == 'stopped':
                 if status.get('exitstatus') == 'OK':
