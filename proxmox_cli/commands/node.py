@@ -8,6 +8,15 @@ def _output(ctx, data, headers=None):
     output_result(ctx, data, headers)
 
 
+def _resolve_node(proxmox, node_name=None):
+    """Resolve node: use given name or default to first available node.
+    Returns the node name or None if no node is available."""
+    if node_name:
+        return node_name
+    nodes = proxmox.nodes.get()
+    return nodes[0]['node'] if nodes else None
+
+
 @click.group()
 def node():
     """Gestion locale du nœud Proxmox (hôte hyperviseur)."""
@@ -62,10 +71,7 @@ def node_info(ctx, node_name):
     proxmox = ctx.obj['api']
 
     try:
-        if not node_name:
-            nodes = proxmox.nodes.get()
-            node_name = nodes[0]['node'] if nodes else None
-
+        node_name = _resolve_node(proxmox, node_name)
         if not node_name:
             click.echo("No node found.", err=True)
             return
@@ -103,10 +109,7 @@ def storage(ctx, node_name):
     proxmox = ctx.obj['api']
 
     try:
-        if not node_name:
-            nodes = proxmox.nodes.get()
-            node_name = nodes[0]['node'] if nodes else None
-
+        node_name = _resolve_node(proxmox, node_name)
         if not node_name:
             click.echo("No node found.", err=True)
             return
@@ -154,10 +157,7 @@ def backup(ctx, vmid, node_name, mode, compress, timeout):
     proxmox = ctx.obj['api']
 
     try:
-        if not node_name:
-            nodes = proxmox.nodes.get()
-            node_name = nodes[0]['node'] if nodes else None
-
+        node_name = _resolve_node(proxmox, node_name)
         if not node_name:
             click.echo("No node found.", err=True)
             return
@@ -201,10 +201,7 @@ def list_backups(ctx, node_name, storage_name):
     proxmox = ctx.obj['api']
 
     try:
-        if not node_name:
-            nodes = proxmox.nodes.get()
-            node_name = nodes[0]['node'] if nodes else None
-
+        node_name = _resolve_node(proxmox, node_name)
         if not node_name:
             click.echo("No node found.", err=True)
             return
@@ -240,10 +237,7 @@ def services(ctx, node_name):
     proxmox = ctx.obj['api']
 
     try:
-        if not node_name:
-            nodes = proxmox.nodes.get()
-            node_name = nodes[0]['node'] if nodes else None
-
+        node_name = _resolve_node(proxmox, node_name)
         if not node_name:
             click.echo("No node found.", err=True)
             return
@@ -272,10 +266,7 @@ def tasks(ctx, node_name, limit):
     proxmox = ctx.obj['api']
 
     try:
-        if not node_name:
-            nodes = proxmox.nodes.get()
-            node_name = nodes[0]['node'] if nodes else None
-
+        node_name = _resolve_node(proxmox, node_name)
         if not node_name:
             click.echo("No node found.", err=True)
             return
@@ -313,10 +304,7 @@ def network(ctx, node_name):
     proxmox = ctx.obj['api']
 
     try:
-        if not node_name:
-            nodes = proxmox.nodes.get()
-            node_name = nodes[0]['node'] if nodes else None
-
+        node_name = _resolve_node(proxmox, node_name)
         if not node_name:
             click.echo("No node found.", err=True)
             return
@@ -354,10 +342,7 @@ def updates(ctx, node_name):
     proxmox = ctx.obj['api']
 
     try:
-        if not node_name:
-            nodes = proxmox.nodes.get()
-            node_name = nodes[0]['node'] if nodes else None
-
+        node_name = _resolve_node(proxmox, node_name)
         if not node_name:
             click.echo("No node found.", err=True)
             return
@@ -397,10 +382,7 @@ def firewall(ctx, node_name):
     proxmox = ctx.obj['api']
 
     try:
-        if not node_name:
-            nodes = proxmox.nodes.get()
-            node_name = nodes[0]['node'] if nodes else None
-
+        node_name = _resolve_node(proxmox, node_name)
         if not node_name:
             click.echo("No node found.", err=True)
             return
