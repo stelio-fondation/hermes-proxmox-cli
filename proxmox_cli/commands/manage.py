@@ -1,4 +1,5 @@
 import click
+import time
 
 @click.group()
 def manage_vm():
@@ -9,13 +10,26 @@ def manage_vm():
 @click.option('--vmid', required=True, type=int, help='ID of the VM/CT to start')
 @click.option('--node', required=True, help='Node where the VM/CT is located')
 @click.option('--type', 'resource_type', type=click.Choice(['qemu', 'lxc']), default='qemu', help='Resource type (qemu=VM, lxc=container)')
+@click.option('--wait', is_flag=True, default=False, help='Wait for the VM to reach running state (timeout 120s)')
 @click.pass_context
-def start(ctx, vmid, node, resource_type):
+def start(ctx, vmid, node, resource_type, wait):
     """Start a VM or container."""
     proxmox = ctx.obj['api']
+    resource = getattr(proxmox.nodes(node), resource_type)
     try:
-        getattr(proxmox.nodes(node), resource_type)(vmid).status.start.post()
+        resource(vmid).status.start.post()
         click.echo(f"{resource_type.upper()} {vmid} start command sent.")
+        if wait:
+            click.echo(f"Waiting for {resource_type} {vmid} to reach running state...")
+            deadline = time.time() + 120
+            while time.time() < deadline:
+                current = resource(vmid).status.current.get()
+                if current.get('status') == 'running':
+                    click.echo(f"{resource_type.upper()} {vmid} is now running.")
+                    break
+                time.sleep(2)
+            else:
+                click.echo(f"Timeout waiting for {resource_type} {vmid} to start after 120s.", err=True)
     except Exception as e:
         click.echo(f"Error starting {resource_type} {vmid}: {e}", err=True)
 
@@ -23,13 +37,26 @@ def start(ctx, vmid, node, resource_type):
 @click.option('--vmid', required=True, type=int, help='ID of the VM/CT to stop')
 @click.option('--node', required=True, help='Node where the VM/CT is located')
 @click.option('--type', 'resource_type', type=click.Choice(['qemu', 'lxc']), default='qemu', help='Resource type (qemu=VM, lxc=container)')
+@click.option('--wait', is_flag=True, default=False, help='Wait for the VM to reach stopped state (timeout 120s)')
 @click.pass_context
-def stop(ctx, vmid, node, resource_type):
+def stop(ctx, vmid, node, resource_type, wait):
     """Stop a VM or container."""
     proxmox = ctx.obj['api']
+    resource = getattr(proxmox.nodes(node), resource_type)
     try:
-        getattr(proxmox.nodes(node), resource_type)(vmid).status.stop.post()
+        resource(vmid).status.stop.post()
         click.echo(f"{resource_type.upper()} {vmid} stop command sent.")
+        if wait:
+            click.echo(f"Waiting for {resource_type} {vmid} to stop...")
+            deadline = time.time() + 120
+            while time.time() < deadline:
+                current = resource(vmid).status.current.get()
+                if current.get('status') == 'stopped':
+                    click.echo(f"{resource_type.upper()} {vmid} is now stopped.")
+                    break
+                time.sleep(2)
+            else:
+                click.echo(f"Timeout waiting for {resource_type} {vmid} to stop after 120s.", err=True)
     except Exception as e:
         click.echo(f"Error stopping {resource_type} {vmid}: {e}", err=True)
 
