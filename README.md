@@ -1,4 +1,5 @@
 # hermes-proxmox-cli
+[![CI](https://github.com/stelio-fondation/hermes-proxmox-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/stelio-fondation/hermes-proxmox-cli/actions)
 
 CLI de pilotage d'infrastructure Proxmox — gestion des VMs/CTs et administration du nœud hyperviseur.
 Conçu pour les humains et les agents IA (Hermes Agent, Claude Code, etc.).

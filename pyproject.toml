@@ -13,3 +13,14 @@ dependencies = [
 
 [project.scripts]
 proxmox-cli = "proxmox_cli.main:cli"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"
