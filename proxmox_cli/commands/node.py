@@ -4,6 +4,11 @@ from datetime import datetime
 from ..output import output_result
 
 
+def _bytes_to_gb(bytes_val):
+    """Convert bytes to gigabytes (base-2). Returns 0 for falsy inputs."""
+    return bytes_val / (1024 ** 3) if bytes_val else 0
+
+
 def _resolve_node(proxmox, node_name=None):
     """Resolve node: use given name or default to first available node.
     Returns the node name or None if no node is available."""
@@ -42,10 +47,10 @@ def status(ctx):
                 'cpu_model': status_data.get('cpuinfo', {}).get('model_name', 'N/A') if isinstance(status_data.get('cpuinfo'), dict) else 'N/A',
                 'cpus': status_data.get('cpuinfo', {}).get('cpus', 'N/A') if isinstance(status_data.get('cpuinfo'), dict) else 'N/A',
                 'loadavg': status_data.get('loadavg', ['N/A'])[0] if isinstance(status_data.get('loadavg'), list) else 'N/A',
-                'memory_total_gb': round(status_data.get('memory', {}).get('total', 0) / 1024 / 1024 / 1024, 1) if isinstance(status_data.get('memory'), dict) else 'N/A',
-                'memory_used_gb': round(status_data.get('memory', {}).get('used', 0) / 1024 / 1024 / 1024, 1) if isinstance(status_data.get('memory'), dict) else 'N/A',
-                'swap_total_gb': round(status_data.get('swap', {}).get('total', 0) / 1024 / 1024 / 1024, 1) if isinstance(status_data.get('swap'), dict) else 'N/A',
-                'swap_used_gb': round(status_data.get('swap', {}).get('used', 0) / 1024 / 1024 / 1024, 1) if isinstance(status_data.get('swap'), dict) else 'N/A',
+                'memory_total_gb': round(_bytes_to_gb(status_data.get('memory', {}).get('total', 0)), 1) if isinstance(status_data.get('memory'), dict) else 'N/A',
+                'memory_used_gb': round(_bytes_to_gb(status_data.get('memory', {}).get('used', 0)), 1) if isinstance(status_data.get('memory'), dict) else 'N/A',
+                'swap_total_gb': round(_bytes_to_gb(status_data.get('swap', {}).get('total', 0)), 1) if isinstance(status_data.get('swap'), dict) else 'N/A',
+                'swap_used_gb': round(_bytes_to_gb(status_data.get('swap', {}).get('used', 0)), 1) if isinstance(status_data.get('swap'), dict) else 'N/A',
                 'kversion': status_data.get('kversion', 'N/A'),
                 'pveversion': status_data.get('pveversion', 'N/A'),
             })
@@ -89,10 +94,10 @@ def node_info(ctx, node_name):
             'load_1min': status_data.get('loadavg', ['N/A'])[0] if isinstance(status_data.get('loadavg'), list) else 'N/A',
             'load_5min': status_data.get('loadavg', ['N/A'])[1] if isinstance(status_data.get('loadavg'), list) and len(status_data.get('loadavg', [])) > 1 else 'N/A',
             'load_15min': status_data.get('loadavg', ['N/A'])[2] if isinstance(status_data.get('loadavg'), list) and len(status_data.get('loadavg', [])) > 2 else 'N/A',
-            'memory_total_gb': round(status_data.get('memory', {}).get('total', 0) / 1024 / 1024 / 1024, 1) if isinstance(status_data.get('memory'), dict) else 'N/A',
-            'memory_used_gb': round(status_data.get('memory', {}).get('used', 0) / 1024 / 1024 / 1024, 1) if isinstance(status_data.get('memory'), dict) else 'N/A',
-            'swap_total_gb': round(status_data.get('swap', {}).get('total', 0) / 1024 / 1024 / 1024, 1) if isinstance(status_data.get('swap'), dict) else 'N/A',
-            'swap_used_gb': round(status_data.get('swap', {}).get('used', 0) / 1024 / 1024 / 1024, 1) if isinstance(status_data.get('swap'), dict) else 'N/A',
+            'memory_total_gb': round(_bytes_to_gb(status_data.get('memory', {}).get('total', 0)), 1) if isinstance(status_data.get('memory'), dict) else 'N/A',
+            'memory_used_gb': round(_bytes_to_gb(status_data.get('memory', {}).get('used', 0)), 1) if isinstance(status_data.get('memory'), dict) else 'N/A',
+            'swap_total_gb': round(_bytes_to_gb(status_data.get('swap', {}).get('total', 0)), 1) if isinstance(status_data.get('swap'), dict) else 'N/A',
+            'swap_used_gb': round(_bytes_to_gb(status_data.get('swap', {}).get('used', 0)), 1) if isinstance(status_data.get('swap'), dict) else 'N/A',
         }
 
         output_result(ctx, info)
@@ -132,8 +137,8 @@ def storage(ctx, node_name):
                 'content': s.get('content', 'N/A'),
                 'active': s.get('active', 0),
                 'enabled': s.get('enable', 0),
-                'total_gb': round(total / 1024 / 1024 / 1024, 1) if total else 0,
-                'used_gb': round(used / 1024 / 1024 / 1024, 1) if used else 0,
+                'total_gb': round(_bytes_to_gb(total), 1) if total else 0,
+                'used_gb': round(_bytes_to_gb(used), 1) if used else 0,
                 'used_pct': f"{pct:.1f}%",
             })
 
@@ -214,7 +219,7 @@ def list_backups(ctx, node_name, storage_name):
                     'vmid': item.get('vmid', 'N/A'),
                     'volid': item.get('volid', 'N/A'),
                     'format': item.get('format', 'N/A'),
-                    'size_gb': round(item.get('size', 0) / 1024 / 1024 / 1024, 2) if item.get('size') else 0,
+                    'size_gb': round(_bytes_to_gb(item.get('size', 0)), 2) if item.get('size') else 0,
                     'date': datetime.fromtimestamp(ctime).strftime('%Y-%m-%d %H:%M') if ctime else 'N/A',
                     'notes': item.get('notes', ''),
                 })
