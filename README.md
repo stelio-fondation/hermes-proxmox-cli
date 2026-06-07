@@ -1,4 +1,5 @@
 # hermes-proxmox-cli
+
 [![CI](https://github.com/stelio-fondation/hermes-proxmox-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/stelio-fondation/hermes-proxmox-cli/actions)
 
 CLI de pilotage d'infrastructure Proxmox — gestion des VMs/CTs et administration du nœud hyperviseur.
@@ -12,16 +13,14 @@ uv sync
 
 ## Configuration
 
-Variables d'environnement :
-
 ```bash
 export PM_URL="https://your-proxmox-ip:8006/api2/json"
 export PM_USER="root@pam!mytokenid"
-export PM_TOKEN="your-api-token-secret"
+export PM_TOKEN="your-token"
 export PM_VERIFY_SSL="false"
 ```
 
-## Commandes disponibles
+## Commandes
 
 Toutes les commandes supportent `--format json` (ou `text` par défaut) pour l'intégration IA.
 
@@ -29,65 +28,54 @@ Toutes les commandes supportent `--format json` (ou `text` par défaut) pour l'i
 
 | Commande | Description |
 |---|---|
-| `list [--node <nom>] [--type qemu\|lxc\|all]` | Lister les ressources du cluster |
-| `clone --source-id <id> --new-id <id> --name <nom> --node <nom>` | Cloner une VM/template |
-| `config --vmid <id> --node <nom> [options]` | Configurer une VM (mémoire, CPU, Cloud-Init) |
-| `manage start --vmid <id> --node <nom>` | Démarrer une VM |
-| `manage stop --vmid <id> --node <nom>` | Arrêter une VM |
-| `manage delete --vmid <id> --node <nom>` | Supprimer une VM |
+| `list [--type qemu|lxc] [--sort vmid|name|cpu|mem] [--filter key=val] [--details]` | Lister les ressources avec filtres et tri avancés |
+| `clone --source-id --new-id --name --node [--target-node]` | Cloner une VM/template |
+| `config --vmid --node [--memory] [--cores] [--ip] [--gw] [--ssh-key] [--net] [--disk] [--ostype] ...` | Configurer une VM (mémoire, CPU, Cloud-Init, réseau, disque, OS) |
+| `manage start --vmid --node` | Démarrer une VM/CT |
+| `manage stop --vmid --node [--force] [--wait]` | Arrêter une VM/CT (shutdown gracieux par défaut) |
+| `manage delete --vmid --node` | Supprimer une VM/CT |
 
-**Options de config :**
-- `--memory <MB>` — Mémoire vive
-- `--cores <N>` — Nombre de CPU
-- `--ip <CIDR>` — Adresse IP Cloud-Init (ex: `192.168.1.50/24`)
-- `--gw <IP>` — Passerelle Cloud-Init
-- `--ssh-key "<key>"` — Clé SSH publique Cloud-Init
-
-### Administration du nœud hyperviseur
+### Snapshots
 
 | Commande | Description |
 |---|---|
-| `node status` | **État global du nœud** — uptime, CPU, RAM, load, version PVE |
-| `node info` | **Infos système détaillées** — kernel, modèle CPU, swap, loads 1/5/15min |
-| `node storage` | **Stockages** — liste, type, actif, espace utilisé/total |
-| `node services` | **Services PVE** — pveproxy, pvedaemon, corosync, etc. |
-| `node tasks [--limit <N>]` | **Tâches récentes** — clonages, backups, migrations |
-| `node network` | **Réseau** — bridges, bonds, interfaces, adresses |
-| `node firewall` | **Règles pare-feu** du nœud |
-| `node updates` | **Mises à jour disponibles** (APT) |
-| `node backup --vmid <id> [--mode snapshot\|suspend\|stop]` | **Backup** d'une VM via vzdump |
-| `node backups [--storage <nom>]` | **Liste des backups** disponibles |
+| `snapshot list --vmid --node` | Lister les snapshots |
+| `snapshot create --vmid --node --name [--description]` | Créer un snapshot |
+| `snapshot rollback --vmid --node --name` | Restaurer un snapshot |
+| `snapshot delete --vmid --node --name [--force]` | Supprimer un snapshot |
 
-**Options de backup :**
-- `--mode snapshot\|suspend\|stop` — Mode de backup (défaut: `snapshot`)
-- `--compress 0\|1\|lzo\|gzip\|zstd` — Algorithme de compression (défaut: `zstd`)
+### Templates
 
-### Exemples
+| Commande | Description |
+|---|---|
+| `template list [--node] [--type]` | Lister les templates disponibles |
+| `template deploy --source-id --new-id --name --node [--memory] [--cores] [--storage]` | Déployer depuis un template |
+| `template convert --vmid --node [--force]` | Convertir une VM en template |
+
+### Administration du nœud
+
+| Commande | Description |
+|---|---|
+| `node status` | État global du nœud — uptime, CPU, RAM, load, version PVE |
+| `node info` | Infos système détaillées — kernel, modèle CPU, swap |
+| `node storage` | Liste des stockages avec utilisation |
+| `node backup --vmid` | Lancer un backup |
+| `node backups` | Lister les backups |
+| `node services` | État des services PVE |
+| `node tasks [--limit]` | Dernières tâches |
+| `node network` | Configuration réseau |
+| `node updates` | Mises à jour disponibles |
+| `node firewall` | Règles du firewall |
+
+## Développement
 
 ```bash
-# État du cluster
-python -m proxmox_cli.main list --type qemu --format json
+# Lancer les tests
+uv run pytest tests/ -v
 
-# Infos détaillées du nœud
-python -m proxmox_cli.main node info
+# Avec couverture
+uv run pytest tests/ -v --cov=proxmox_cli --cov-report=term-missing
 
-# Stockage et utilisation
-python -m proxmox_cli.main node storage
-
-# Backup d'une VM
-python -m proxmox_cli.main node backup --vmid 100 --mode snapshot
-
-# Lister les backups
-python -m proxmox_cli.main node backups --storage local
-
-# Voir les tâches récentes
-python -m proxmox_cli.main node tasks --limit 10
-
-# Cloner un template
-python -m proxmox_cli.main clone --source-id 9000 --new-id 100 --name "web-server" --node "pve1" --full
+# Linting
+uv run ruff check proxmox_cli/ tests/
 ```
-
-## Skill IA
-
-Le fichier `SKILL.md` fournit les instructions pour qu'un agent IA pilote cet outil de manière idempotente.
-Le fichier `AGENTS.md` documente l'intégration GitNexus et les conventions de développement.

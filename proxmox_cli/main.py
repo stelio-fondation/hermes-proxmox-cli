@@ -2,13 +2,13 @@ import click
 from .api import get_api_client
 
 @click.group()
-@click.option('--format', type=click.Choice(['text', 'json']), default='text', help='Output format')
+@click.option("--format", type=click.Choice(["text", "json"]), default="text", help="Output format")
 @click.pass_context
 def cli(ctx, format):
     """Proxmox CLI for portable infrastructure automation."""
     ctx.ensure_object(dict)
-    ctx.obj['format'] = format
-    ctx.obj['api'] = get_api_client()
+    ctx.obj["format"] = format
+    ctx.obj["api"] = get_api_client()
 
 from .output import output_result
 
@@ -18,12 +18,16 @@ from .commands.clone import clone_vm
 from .commands.config import config_vm
 from .commands.manage import manage_vm
 from .commands.node import node as node_group
+from .commands.snapshot import snapshot as snapshot_group
+from .commands.template import template as template_group
 
-cli.add_command(list_resources, name='list')
-cli.add_command(clone_vm, name='clone')
-cli.add_command(config_vm, name='config')
-cli.add_command(manage_vm, name='manage')
-cli.add_command(node_group, name='node')
+cli.add_command(list_resources, name="list")
+cli.add_command(clone_vm, name="clone")
+cli.add_command(config_vm, name="config")
+cli.add_command(manage_vm, name="manage")
+cli.add_command(node_group, name="node")
+cli.add_command(snapshot_group, name="snapshot")
+cli.add_command(template_group, name="template")
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cli(obj={})
