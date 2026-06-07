@@ -2,9 +2,9 @@ import click
 
 @click.command()
 @click.option('--node', help='Filter by node name')
-@click.option('--type', type=click.Choice(['qemu', 'lxc', 'all']), default='all', help='Resource type')
+@click.option('--type', 'resource_type', type=click.Choice(['qemu', 'lxc', 'all']), default='all', help='Resource type')
 @click.pass_context
-def list_resources(ctx, node, type):
+def list_resources(ctx, node, resource_type):
     """List resources available on the Proxmox cluster."""
     proxmox = ctx.obj['api']
     from ..output import output_result
@@ -14,7 +14,7 @@ def list_resources(ctx, node, type):
     # If no node specified, we might want to list nodes first or crawl all nodes
     # For V1, we list all resources from the cluster perspective
     try:
-        data = proxmox.cluster.resources.get(type=type if type != 'all' else None)
+        data = proxmox.cluster.resources.get(type=resource_type if resource_type != 'all' else None)
         for item in data:
             if node and item.get('node') != node:
                 continue
