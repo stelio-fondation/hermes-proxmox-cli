@@ -4,7 +4,7 @@ from datetime import datetime
 
 def _output(ctx, data, headers=None):
     """Utility to output data in text or json format."""
-    from ..main import output_result
+    from ..output import output_result
     output_result(ctx, data, headers)
 
 

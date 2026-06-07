@@ -7,7 +7,7 @@ import click
 def list_resources(ctx, node, type):
     """List resources available on the Proxmox cluster."""
     proxmox = ctx.obj['api']
-    from ..main import output_result
+    from ..output import output_result
 
     resources = []
     
