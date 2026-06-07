@@ -26,10 +26,17 @@ def get_api_client():
         sys.exit(1)
 
     try:
+        # Parse PM_USER: expected format "user@realm!tokenid"
+        if "!" in user:
+            user_name, token_name = user.split("!", 1)
+        else:
+            user_name = user
+            token_name = None
+
         return ProxmoxAPI(
             url,
-            user=user,
-            token_name=user.split("!")[1] if "!" in user else None,
+            user=user_name,
+            token_name=token_name,
             token_value=token,
             verify_ssl=verify_ssl
         )
