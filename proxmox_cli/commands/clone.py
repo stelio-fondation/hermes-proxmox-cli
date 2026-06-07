@@ -6,18 +6,19 @@ import time
 @click.option('--new-id', required=True, type=int, help='ID for the new VM')
 @click.option('--name', required=True, help='Name for the new VM')
 @click.option('--node', required=True, help='Node where the source is located')
+@click.option('--type', 'resource_type', type=click.Choice(['qemu', 'lxc']), default='qemu', help='Resource type (qemu=VM, lxc=container)')
 @click.option('--full', is_flag=True, default=False, help='Create a full clone instead of a linked clone')
 @click.option('--timeout', default=300, type=int, help='Max wait time in seconds for task completion (default: 300)')
 @click.pass_context
-def clone_vm(ctx, source_id, new_id, name, node, full, timeout):
+def clone_vm(ctx, source_id, new_id, name, node, resource_type, full, timeout):
     """Clone a VM or template."""
     proxmox = ctx.obj['api']
     
-    click.echo(f"Cloning VM {source_id} to {new_id} ({name}) on node {node}...")
+    click.echo(f"Cloning {resource_type} {source_id} to {new_id} ({name}) on node {node}...")
     
     try:
-        # Clone the VM
-        task_upid = proxmox.nodes(node).qemu(source_id).clone.post(
+        # Clone the VM/CT
+        task_upid = getattr(proxmox.nodes(node), resource_type)(source_id).clone.post(
             newid=new_id,
             name=name,
             full=1 if full else 0

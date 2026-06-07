@@ -1,16 +1,17 @@
 import click
 
 @click.command()
-@click.option('--vmid', required=True, type=int, help='ID of the VM to configure')
-@click.option('--node', required=True, help='Node where the VM is located')
+@click.option('--vmid', required=True, type=int, help='ID of the VM/CT to configure')
+@click.option('--node', required=True, help='Node where the VM/CT is located')
+@click.option('--type', 'resource_type', type=click.Choice(['qemu', 'lxc']), default='qemu', help='Resource type (qemu=VM, lxc=container)')
 @click.option('--memory', type=int, help='Memory in MB')
 @click.option('--cores', type=int, help='Number of CPU cores')
 @click.option('--ip', help='IP address for Cloud-Init (e.g. 192.168.1.50/24)')
 @click.option('--gw', help='Gateway for Cloud-Init')
 @click.option('--ssh-key', help='Public SSH key for Cloud-Init')
 @click.pass_context
-def config_vm(ctx, vmid, node, memory, cores, ip, gw, ssh_key):
-    """Update VM configuration and Cloud-Init settings."""
+def config_vm(ctx, vmid, node, resource_type, memory, cores, ip, gw, ssh_key):
+    """Update VM/CT configuration and Cloud-Init settings."""
     proxmox = ctx.obj['api']
     
     params = {}
@@ -27,10 +28,10 @@ def config_vm(ctx, vmid, node, memory, cores, ip, gw, ssh_key):
         click.echo("No configuration parameters provided.")
         return
 
-    click.echo(f"Updating configuration for VM {vmid} on node {node}...")
+    click.echo(f"Updating configuration for {resource_type} {vmid} on node {node}...")
     
     try:
-        proxmox.nodes(node).qemu(vmid).config.post(**params)
+        getattr(proxmox.nodes(node), resource_type)(vmid).config.post(**params)
         click.echo("Configuration updated successfully.")
     except Exception as e:
         click.echo(f"Error updating configuration: {e}", err=True)
