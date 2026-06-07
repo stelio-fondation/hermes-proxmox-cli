@@ -1,5 +1,5 @@
 import os
-import sys
+import click
 from proxmoxer import ProxmoxAPI
 from dotenv import load_dotenv
 
@@ -21,9 +21,10 @@ def get_api_client():
     verify_ssl = os.getenv("PM_VERIFY_SSL", "true").lower() == "true"
 
     if not all([url, user, token]):
-        print("Error: Missing environment variables for Proxmox authentication.", file=sys.stderr)
-        print("Please ensure PM_URL, PM_USER, and PM_TOKEN are set.", file=sys.stderr)
-        sys.exit(1)
+        raise click.ClickException(
+            "Missing environment variables for Proxmox authentication. "
+            "Please ensure PM_URL, PM_USER, and PM_TOKEN are set."
+        )
 
     try:
         # Parse PM_USER: expected format "user@realm!tokenid"
@@ -41,5 +42,4 @@ def get_api_client():
             verify_ssl=verify_ssl
         )
     except Exception as e:
-        print(f"Error connecting to Proxmox API: {e}", file=sys.stderr)
-        sys.exit(1)
+        raise click.ClickException(f"Error connecting to Proxmox API: {e}")
