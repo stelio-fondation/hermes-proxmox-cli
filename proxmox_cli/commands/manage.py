@@ -37,15 +37,20 @@ def start(ctx, vmid, node, resource_type, wait):
 @click.option('--vmid', required=True, type=int, help='ID of the VM/CT to stop')
 @click.option('--node', required=True, help='Node where the VM/CT is located')
 @click.option('--type', 'resource_type', type=click.Choice(['qemu', 'lxc']), default='qemu', help='Resource type (qemu=VM, lxc=container)')
+@click.option('--force', is_flag=True, default=False, help='Force stop (skip graceful shutdown)')
 @click.option('--wait', is_flag=True, default=False, help='Wait for the VM to reach stopped state (timeout 120s)')
 @click.pass_context
-def stop(ctx, vmid, node, resource_type, wait):
-    """Stop a VM or container."""
+def stop(ctx, vmid, node, resource_type, force, wait):
+    """Stop a VM or container (graceful shutdown by default, --force for hard stop)."""
     proxmox = ctx.obj['api']
     resource = getattr(proxmox.nodes(node), resource_type)
     try:
-        resource(vmid).status.stop.post()
-        click.echo(f"{resource_type.upper()} {vmid} stop command sent.")
+        if force:
+            resource(vmid).status.stop.post()
+            click.echo(f"{resource_type.upper()} {vmid} hard stop command sent.")
+        else:
+            resource(vmid).status.shutdown.post()
+            click.echo(f"{resource_type.upper()} {vmid} shutdown command sent.")
         if wait:
             click.echo(f"Waiting for {resource_type} {vmid} to stop...")
             deadline = time.time() + 120
