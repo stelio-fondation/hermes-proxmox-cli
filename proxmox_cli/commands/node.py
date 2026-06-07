@@ -77,7 +77,10 @@ def node_info(ctx, node_name):
             return
 
         status_data = proxmox.nodes(node_name).status.get()
-        config_data = proxmox.nodes(node_name).config.get() if hasattr(proxmox.nodes(node_name), 'config') else {}
+        try:
+            config_data = proxmox.nodes(node_name).config.get()
+        except Exception:
+            config_data = {}
 
         info = {
             'node': node_name,
